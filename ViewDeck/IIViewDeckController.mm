@@ -81,14 +81,14 @@ NSString* NSStringFromIIViewDeckSide(IIViewDeckSide side) {
 
 BOOL shouldSupportLandscape;
 BOOL statusBarIsHidden;
-BOOL statusBarIsDefaultStyle = YES;
+UIStatusBarStyle statusBarStyle = UIStatusBarStyleLightContent;
 
 - (BOOL)prefersStatusBarHidden {
   return statusBarIsHidden;
 }
 
 - (UIStatusBarStyle)preferredStatusBarStyle {
-  return statusBarIsDefaultStyle ? UIStatusBarStyleDefault : UIStatusBarStyleLightContent;
+  return statusBarStyle;
 }
 
 - (void)setStatusBarHidden:(BOOL)isHidden {
@@ -96,17 +96,18 @@ BOOL statusBarIsDefaultStyle = YES;
   [self setNeedsStatusBarAppearanceUpdate];
 }
 
-- (void)setStatusBarStyleAsDefault:(BOOL)isDefault {
-  statusBarIsDefaultStyle = isDefault;
+- (void)setStatusBarLightContent {
+  statusBarStyle = UIStatusBarStyleLightContent;
   [self setNeedsStatusBarAppearanceUpdate];
 }
 
-- (void)setStatusBarStyleDefault {
-  [self setStatusBarStyleAsDefault:YES];
-}
-
-- (void)setStatusBarStyleLight {
-  [self setStatusBarStyleAsDefault:NO];
+- (void)setStatusBarDarkContent {
+  if (@available(iOS 13.0, *)) {
+    statusBarStyle = UIStatusBarStyleDarkContent;
+  } else {
+    statusBarStyle = UIStatusBarStyleDefault;
+  }
+  [self setNeedsStatusBarAppearanceUpdate];
 }
 
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations
@@ -115,7 +116,7 @@ BOOL statusBarIsDefaultStyle = YES;
   //  if (shouldSupportLandscape) {
   //    return UIInterfaceOrientationMaskAllButUpsideDown;
   //  } else {
-  return UIInterfaceOrientationMaskPortrait;
+  return UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad ? UIInterfaceOrientationMaskAll : UIInterfaceOrientationMaskPortrait;
   //  }
 }
 
@@ -209,8 +210,8 @@ II_DELEGATE_PROXY(IIViewDeckControllerDelegate);
 - (void)addNotificationObservers {
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(activateLandscapeSupport) name:@"ActivateLandscapeOrientationSupport" object:nil];
   [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(cancelLandscapeSupport) name:@"CancelLandscapeOrientationSupport" object:nil];
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(setStatusBarStyleDefault) name:@"MakeStatusBarContentDefault" object:nil];
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(setStatusBarStyleLight) name:@"MakeStatusBarContentLight" object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(setStatusBarDarkContent) name:@"MakeStatusBarDarkContent" object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(setStatusBarLightContent) name:@"MakeStatusBarLightContent" object:nil];
 }
 
 - (void)activateLandscapeSupport {
